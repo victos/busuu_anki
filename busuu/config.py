@@ -1,12 +1,20 @@
+import json
+import os
+
+
 class Busuu:
+    def __init__(self):
+        with open("config.json") as config_file:
+            config = json.load(config_file)
+            self.username = config['username']
+            self.password = config['password']
+            self.anki_home = config['anki_home']
+
     def get_username(self):
-        return ''
+        return self.username
 
     def get_password(self):
-        return ''
-
-    def get_anki_home(self):
-        return ''
+        return self.password
 
     def get_anki_db(self):
-        return self.get_anki_home() + 'local/collection.anki2'
+        return self.anki_home + 'local/collection.anki2'

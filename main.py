@@ -19,3 +19,8 @@ def get_collection():
 if __name__ == '__main__':
     col = get_collection()
     print(col.name())
+    i = 1
+    for entity_id, phrase, image, meaning, audio, example, example_meaning, example_audio in fetch_from_busuu():
+        print("%d\t%s" % (i,entity_id))
+        i += 1
+
