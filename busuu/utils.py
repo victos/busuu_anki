@@ -1,5 +1,6 @@
 import urllib.request as request
 import json
+import os
 
 
 def get_token(email, password):
@@ -58,7 +59,7 @@ def vocabulary_factory(raw):
         example_content_zh = example_content.get('zh', {})
         f_example_cn = example_content_zh.get('value', '')
 
-        yield entity_id, f_phrase, image_url, f_phrase_cn, f_phrase_audio, f_example, f_example_cn, f_example_audio
+        yield BusuuEntity(entity_id, f_phrase, image_url, f_phrase_cn, f_phrase_audio, f_example, f_example_cn, f_example_audio)
 
 
 # for entity_id, phrase, image, meaning, audio, example, example_meaning, example_audio in vocabulary_factory(raw):
@@ -66,3 +67,36 @@ def fetch_vocabulary(username, password):
     token = get_token(username, password)
     raw = get_vocabulary(token)
     return vocabulary_factory(raw)
+
+
+def download(url):
+    if len(url) > 0:
+        filename = os.path.basename(url)
+        try:
+            resp = request.urlopen(url)
+        except request.URLError:
+            return filename, None
+        if resp.code != 200:
+            return filename, None
+        return filename, resp.read()
+    return None, None
+
+
+class BusuuMedia:
+    def __init__(self, url):
+        filename, data = download(url)
+        self.name = filename
+        self.data = data
+
+
+class BusuuEntity:
+    def __init__(self, entity_id, f_phrase, image_url, f_phrase_cn, f_phrase_audio, f_example, f_example_cn,
+                 f_example_audio):
+        self.id = entity_id
+        self.phrase = f_phrase
+        self.image = BusuuMedia(image_url)
+        self.meaning = f_phrase_cn
+        self.phrase_audio = BusuuMedia(f_phrase_audio)
+        self.example = f_example
+        self.example_meaning = f_example_cn
+        self.example_audio = BusuuMedia(f_example_audio)
