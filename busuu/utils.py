@@ -76,6 +76,9 @@ def fetch_vocabulary(username, password):
     else:
         token = get_token(username, password)
         raw = get_vocabulary(token)
+        f = open(file_name, 'wb')
+        f.write(json.dumps(raw).encode('utf-8'))
+        f.close()
     return vocabulary_factory(raw)
 
 
