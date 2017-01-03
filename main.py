@@ -1,8 +1,10 @@
 import busuu.utils as utils
+import json
 
 from anki.storage import Collection
 from anki.notes import Note
 from busuu.config import Busuu
+from busuu.utils import BusuuMedia
 
 conf = Busuu()
 
@@ -12,24 +14,34 @@ class AnkiBridge:
         self.collection = collection
 
     def add_busuu_entity_as_note(self, deck_name, model_name, busuu_entity, entity_mapping={
-        'phrase': 'parase',
+        'id': 'id',
+        'phrase': 'phrase',
         'image': 'image',
         'meaning': 'meaning',
         'phrase_audio': 'phrase_audio',
         'example': 'example',
         'example_meaning': 'example_meaning',
-        'example_audio': 'example_audio'
-    }, tags=[]):
+        'example_audio': 'example_audio',
+        'add_reverse': 'add_reverse'
+    }, tags=['busuu'], add_reverse=True):
         if busuu_entity is None:
             return
         fields = {}
-        for name, value in entity_mapping.items:
-            fields[value] = busuu_entity[name]
-
-        self.save_media(busuu_entity.image, fields, entity_mapping['image'], '<img src="{}" />')
-        self.save_media(busuu_entity.phrase_audio, fields, entity_mapping['phrase_audio'], '[sound:{}]')
-        self.save_media(busuu_entity.example_audio, fields, entity_mapping['example_audio'], '[sound:{}]')
-        self.add_note(deck_name, model_name, fields, tags)
+        for name, value in entity_mapping.items():
+            if not isinstance(busuu_entity[name], BusuuMedia):
+                fields[value] = busuu_entity[name]
+        if entity_mapping['add_reverse'] is not None:
+            if not add_reverse:
+                fields[entity_mapping['add_reverse']] = None
+            else:
+                fields[entity_mapping['add_reverse']] = 'true'
+        if self.can_add_note(deck_name, model_name, fields):
+            self.save_media(busuu_entity.image, fields, entity_mapping['image'], '<img src="{}" />')
+            self.save_media(busuu_entity.phrase_audio, fields, entity_mapping['phrase_audio'], '[sound:{}]')
+            self.save_media(busuu_entity.example_audio, fields, entity_mapping['example_audio'], '[sound:{}]')
+            return self.add_note(deck_name, model_name, fields, tags)
+        else:
+            return None, fields
 
     def save_media(self, busuu_media, fields, key, template):
         if busuu_media is not None:
@@ -40,23 +52,23 @@ class AnkiBridge:
                 self.media().writeData(name, data)
 
     def add_note(self, deck_name, model_name, fields, tags):
-        collection = self.collection()
+        collection = self.collection
         if collection is None:
-            return
+            return None, fields
 
-        note = self.createNote(deck_name, model_name, fields, tags)
+        note = self.create_note(deck_name, model_name, fields, tags)
         if note is None:
-            return
+            return None, fields
 
         collection.addNote(note)
         collection.autosave()
-        return note.id
+        return note.id, fields
 
     def can_add_note(self, dock_name, model_name, fields):
-        return bool(self.createNote(dock_name, model_name, fields))
+        return bool(self.create_note(dock_name, model_name, fields))
 
     def create_note(self, deck_name, model_name, fields, tags=[]):
-        collection = self.collection()
+        collection = self.collection
         if collection is None:
             return
 
@@ -75,25 +87,22 @@ class AnkiBridge:
         for name, value in fields.items():
             if name in note:
                 note[name] = value
-
+        # ignore duplicate item
         if not note.dupeOrEmpty():
             return note
 
-    def collection(self):
-        return self.collection
-
     def media(self):
-        collection = self.collection()
+        collection = self.collection
         if collection is not None:
             return collection.media
 
     def model_names(self):
-        collection = self.collection()
+        collection = self.collection
         if collection is not None:
             return collection.models.allNames()
 
     def model_field_names(self, model_name):
-        collection = self.collection()
+        collection = self.collection
         if collection is None:
             return
 
@@ -102,7 +111,7 @@ class AnkiBridge:
             return [field['name'] for field in model['flds']]
 
     def deck_names(self):
-        collection = self.collection()
+        collection = self.collection
         if collection is not None:
             return collection.decks.allNames()
 
@@ -117,8 +126,19 @@ def get_collection():
 
 if __name__ == '__main__':
     col = get_collection()
-    print(col.name())
-    i = 1
+    bridge = AnkiBridge(col)
     for entity in fetch_from_busuu():
-        print("%d\t%s" % (i, entity.id))
-        i += 1
+        # id, fields = bridge.add_busuu_entity_as_note("English", "English-Card", entity)
+        id, fields = bridge.add_busuu_entity_as_note("English", "busuu", entity, entity_mapping={
+            'id': 'id',
+            'phrase': 'phrase',
+            'image': 'phrase_image',
+            'meaning': 'phrase_meaning',
+            'phrase_audio': 'phrase_audio',
+            'example': 'example',
+            'example_meaning': 'example_meaning',
+            'example_audio': 'example_audio',
+            'add_reverse': 'Add Reverse'
+        })
+        print(id, json.dumps(fields))
+    col.close()

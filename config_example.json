@@ -1,5 +1,6 @@
 {
   "username":"username",
   "password":"password",
+  "profile":"profile_name",
   "anki_home":"/path/to/anki/"
 }

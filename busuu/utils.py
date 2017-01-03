@@ -59,13 +59,23 @@ def vocabulary_factory(raw):
         example_content_zh = example_content.get('zh', {})
         f_example_cn = example_content_zh.get('value', '')
 
-        yield BusuuEntity(entity_id, f_phrase, image_url, f_phrase_cn, f_phrase_audio, f_example, f_example_cn, f_example_audio)
+        yield BusuuEntity(entity_id, f_phrase, image_url, f_phrase_cn, f_phrase_audio, f_example, f_example_cn,
+                          f_example_audio)
 
 
 # for entity_id, phrase, image, meaning, audio, example, example_meaning, example_audio in vocabulary_factory(raw):
 def fetch_vocabulary(username, password):
-    token = get_token(username, password)
-    raw = get_vocabulary(token)
+    file_name = 'result.txt'
+    if os.path.exists(file_name) and os.path.isfile(file_name):
+        f = open(file_name, 'rb')
+        lines = f.readlines()
+        f_content = ""
+        for line in lines:
+            f_content += line.decode('utf-8')
+        raw = json.loads(f_content)
+    else:
+        token = get_token(username, password)
+        raw = get_vocabulary(token)
     return vocabulary_factory(raw)
 
 
@@ -84,19 +94,31 @@ def download(url):
 
 class BusuuMedia:
     def __init__(self, url):
-        filename, data = download(url)
-        self.name = filename
-        self.data = data
+        self.url = url
+        self.container = None
+
+    def __getattr__(self, item):
+        if len(self.url) > 0:
+            if self.container is None:
+                filename, data = download(self.url)
+                self.container = {
+                    'name': filename,
+                    'data': data
+                }
+        else:
+            self.container = {}
+        return self.container.get(item, None)
 
 
 class BusuuEntity:
     def __init__(self, entity_id, f_phrase, image_url, f_phrase_cn, f_phrase_audio, f_example, f_example_cn,
                  f_example_audio):
-        self.id = entity_id
-        self.phrase = f_phrase
-        self.image = BusuuMedia(image_url)
-        self.meaning = f_phrase_cn
-        self.phrase_audio = BusuuMedia(f_phrase_audio)
-        self.example = f_example
-        self.example_meaning = f_example_cn
-        self.example_audio = BusuuMedia(f_example_audio)
+        self.container = {'id': entity_id, 'phrase': f_phrase, 'image': BusuuMedia(image_url), 'meaning': f_phrase_cn,
+                          'phrase_audio': BusuuMedia(f_phrase_audio), 'example': f_example, 'add_reverse': True,
+                          'example_meaning': f_example_cn, 'example_audio': BusuuMedia(f_example_audio)}
+
+    def __getitem__(self, item):
+        return self.container[item]
+
+    def __getattr__(self, item):
+        return self.container[item]

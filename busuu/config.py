@@ -9,6 +9,7 @@ class Busuu:
             self.username = config['username']
             self.password = config['password']
             self.anki_home = config['anki_home']
+            self.profile = config['profile']
 
     def get_username(self):
         return self.username
@@ -17,4 +18,4 @@ class Busuu:
         return self.password
 
     def get_anki_db(self):
-        return self.anki_home + 'local/collection.anki2'
+        return self.anki_home + self.profile + '/collection.anki2'
