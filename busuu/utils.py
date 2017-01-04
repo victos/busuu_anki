@@ -3,6 +3,8 @@ import json
 import os
 
 
+# https://developer.oxforddictionaries.com/documentation
+# get /entries/{source_lang}/{word_id}/regions={region}
 def get_token(email, password):
     req = request.Request(
         "https://api.busuu.com/anon/login",

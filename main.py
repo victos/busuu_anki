@@ -10,8 +10,8 @@ conf = Busuu()
 
 
 class AnkiBridge:
-    def __init__(self, collection):
-        self.collection = collection
+    def __init__(self):
+        self.collection = Collection(conf.get_anki_db())
 
     def add_busuu_entity_as_note(self, deck_name, model_name, busuu_entity, entity_mapping={
         'id': 'id',
@@ -115,30 +115,30 @@ class AnkiBridge:
         if collection is not None:
             return collection.decks.allNames()
 
+    def close_collection(self):
+        self.collection.close()
+
 
 def fetch_from_busuu():
     return utils.fetch_vocabulary(conf.get_username(), conf.get_password())
 
 
-def get_collection():
-    return Collection(conf.get_anki_db())
-
-
 if __name__ == '__main__':
-    col = get_collection()
-    bridge = AnkiBridge(col)
+    bridge = AnkiBridge()
     for entity in fetch_from_busuu():
         # id, fields = bridge.add_busuu_entity_as_note("English", "English-Card", entity)
-        id, fields = bridge.add_busuu_entity_as_note("English", "busuu", entity, entity_mapping={
-            'id': 'id',
-            'phrase': 'phrase',
-            'image': 'phrase_image',
-            'meaning': 'phrase_meaning',
-            'phrase_audio': 'phrase_audio',
-            'example': 'example',
-            'example_meaning': 'example_meaning',
-            'example_audio': 'example_audio',
-            'add_reverse': 'Add Reverse'
-        })
-        print(id, json.dumps(fields))
-    col.close()
+
+        entity_id, fields = bridge.add_busuu_entity_as_note("Default", "EnglishCard (optional reversed card)", entity,
+                                                            entity_mapping={
+                                                                'id': 'id',
+                                                                'phrase': 'word',
+                                                                'image': 'picture',
+                                                                'meaning': 'meaning',
+                                                                'phrase_audio': 'sound',
+                                                                'example': 'example',
+                                                                'example_meaning': 'example_meaning',
+                                                                'example_audio': 'example_sound',
+                                                                'add_reverse': 'Add Reverse'
+                                                            })
+        print(entity_id, json.dumps(fields))
+    bridge.close_collection()
