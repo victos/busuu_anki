@@ -1,6 +1,9 @@
 import urllib.request as request
+import busuu.config as config
 import json
 import os
+
+temp_path = config.get_config().get_busuu_temp()
 
 
 # https://developer.oxforddictionaries.com/documentation
@@ -68,8 +71,8 @@ def vocabulary_factory(raw):
 # for entity_id, phrase, image, meaning, audio, example, example_meaning, example_audio in vocabulary_factory(raw):
 def fetch_vocabulary(username, password):
     file_name = 'result.txt'
-    if os.path.exists(file_name) and os.path.isfile(file_name):
-        f = open(file_name, 'rb')
+    if os.path.exists(temp_path + file_name) and os.path.isfile(temp_path + file_name):
+        f = open(temp_path + file_name, 'rb')
         lines = f.readlines()
         f_content = ""
         for line in lines:
@@ -78,22 +81,31 @@ def fetch_vocabulary(username, password):
     else:
         token = get_token(username, password)
         raw = get_vocabulary(token)
-        f = open(file_name, 'wb')
+        f = open(temp_path + file_name, 'wb')
         f.write(json.dumps(raw).encode('utf-8'))
         f.close()
     return vocabulary_factory(raw)
 
 
 def download(url):
+    if not os.path.exists(temp_path):
+        os.mkdir(temp_path)
     if len(url) > 0:
         filename = os.path.basename(url)
-        try:
-            resp = request.urlopen(url)
-        except request.URLError:
-            return filename, None
-        if resp.code != 200:
-            return filename, None
-        return filename, resp.read()
+        if os.path.exists(temp_path + filename):
+            with open(temp_path + filename, 'rb') as f:
+                data = f.read()
+        else:
+            try:
+                resp = request.urlopen(url)
+                data = resp.read()
+                with open(temp_path + filename, 'wb') as f:
+                    f.write(data)
+            except request.URLError:
+                return filename, None
+            if resp.code != 200:
+                return filename, None
+        return filename, data
     return None, None
 
 

@@ -3,10 +3,10 @@ import json
 
 from anki.storage import Collection
 from anki.notes import Note
-from busuu.config import Busuu
+from busuu import config
 from busuu.utils import BusuuMedia
 
-conf = Busuu()
+conf = config.get_config()
 
 
 class AnkiBridge:
@@ -128,16 +128,16 @@ if __name__ == '__main__':
     for entity in fetch_from_busuu():
         # id, fields = bridge.add_busuu_entity_as_note("English", "English-Card", entity)
 
-        entity_id, fields = bridge.add_busuu_entity_as_note("Default", "EnglishCard (optional reversed card)", entity,
+        entity_id, fields = bridge.add_busuu_entity_as_note("English", "busuu", entity,
                                                             entity_mapping={
                                                                 'id': 'id',
-                                                                'phrase': 'word',
-                                                                'image': 'picture',
-                                                                'meaning': 'meaning',
-                                                                'phrase_audio': 'sound',
+                                                                'phrase': 'phrase',
+                                                                'image': 'phrase_image',
+                                                                'meaning': 'phrase_meaning',
+                                                                'phrase_audio': 'phrase_audio',
                                                                 'example': 'example',
                                                                 'example_meaning': 'example_meaning',
-                                                                'example_audio': 'example_sound',
+                                                                'example_audio': 'example_audio',
                                                                 'add_reverse': 'Add Reverse'
                                                             })
         print(entity_id, json.dumps(fields))

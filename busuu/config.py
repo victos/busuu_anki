@@ -1,8 +1,7 @@
 import json
-import os
 
 
-class Busuu:
+class Config:
     def __init__(self):
         with open("config.json") as config_file:
             config = json.load(config_file)
@@ -19,3 +18,13 @@ class Busuu:
 
     def get_anki_db(self):
         return self.anki_home + self.profile + '/collection.anki2'
+
+    def get_busuu_temp(self):
+        return self.anki_home + self.profile + '/busuu_temp/'
+
+
+config = Config()
+
+
+def get_config():
+    return config
