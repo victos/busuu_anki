@@ -70,6 +70,8 @@ def vocabulary_factory(raw):
 
 # for entity_id, phrase, image, meaning, audio, example, example_meaning, example_audio in vocabulary_factory(raw):
 def fetch_vocabulary(username, password):
+    if not os.path.exists(temp_path):
+        os.mkdir(temp_path)
     file_name = 'result.txt'
     if os.path.exists(temp_path + file_name) and os.path.isfile(temp_path + file_name):
         f = open(temp_path + file_name, 'rb')
@@ -88,8 +90,6 @@ def fetch_vocabulary(username, password):
 
 
 def download(url):
-    if not os.path.exists(temp_path):
-        os.mkdir(temp_path)
     if len(url) > 0:
         filename = os.path.basename(url)
         if os.path.exists(temp_path + filename):
